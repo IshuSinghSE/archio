@@ -1,0 +1,15 @@
+[project]
+name = "archio"
+version = "0.1.0"
+description = "JARVIS Command Console with backend listener"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "Adafruit_IO",
+    "setuptools<81",
+    "paho-mqtt"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

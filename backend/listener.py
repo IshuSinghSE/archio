@@ -1,6 +1,10 @@
 import os
 import sys
+import warnings
 from Adafruit_IO import MQTTClient
+
+# Suppress the pkg_resources deprecation warning
+warnings.filterwarnings("ignore", message="pkg_resources is deprecated as an API")
 
 # Import configuration
 try:
@@ -50,4 +54,8 @@ if __name__ == "__main__":
 
     # Start a blocking loop to listen for messages.
     # This will run forever until you press Ctrl+C in the terminal.
-    client.loop_blocking()
+    try:
+        client.loop_blocking()
+    except KeyboardInterrupt:
+        print("🔌 Disconnecting from Adafruit IO...")
+        client.disconnect()
