@@ -23,3 +23,20 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+
+# Cache files
+node_modules/
+.pnpm-store/
+.cache/
+.next/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd   
+
+# environment files
+.env
+.venv/
+env/
+venv/
