@@ -31,7 +31,8 @@ jobs:
           const CONFIG = {
               AIO_USERNAME: "${{ secrets.AIO_USERNAME }}",
               AIO_KEY: "${{ secrets.AIO_KEY }}",
-              FEED_NAME: "${{ secrets.FEED_NAME }}"
+              FEED_NAME: "${{ secrets.FEED_NAME }}",
+              AIO_FEEDBACK_ID: "${{ secrets.AIO_FEEDBACK_ID }}"
           };
           EOF
 
