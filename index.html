@@ -3,84 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS Command</title>
+    <title>AI Agent Control Panel</title>
     <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { text-align: center; background-color: #1e1e1e; padding: 2rem; border-radius: 15px; box-shadow: 0 0 20px rgba(0, 255, 255, 0.1); }
-        input[type="text"] { width: 80%; padding: 15px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #333; background-color: #2c2c2c; color: #fff; font-size: 1.2em; }
-        button { padding: 15px 30px; border: none; border-radius: 8px; background-color: #007BFF; color: white; font-size: 1.2em; cursor: pointer; transition: background-color 0.3s; }
-        button:hover { background-color: #0056b3; }
-        #status { margin-top: 20px; font-style: italic; color: #888; }
+        body { font-family: sans-serif; background-color: #1e1e1e; color: #d4d4d4; padding: 20px; }
+        #feedback-log {
+            height: 300px;
+            overflow-y: scroll;
+            border: 1px solid #333;
+            background-color: #252526;
+            padding: 10px;
+            margin-top: 15px;
+            white-space: pre-wrap; /* Allows text to wrap */
+        }
+        input { width: 80%; padding: 8px; }
+        button { padding: 8px; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
+    <script src="config.js"></script>
 </head>
 <body>
-    <script src="config.js"></script>
-    <div class="container">
-        <h1>JARVIS Command Console</h1>
-        <input type="text" id="commandInput" placeholder="Tap here and use voice keyboard...">
-        <button onclick="sendCommand()">Execute</button>
-        <p id="status">Status: Idle</p>
+
+    <h1>AI Agent Control Panel</h1>
+    
+    <div>
+        <input type="text" id="command-input" placeholder="Enter command...">
+        <button onclick="sendCommand()">Send</button>
     </div>
 
+    <h2>Feedback Log</h2>
+    <div id="feedback-log">Connecting to feedback stream...</div>
+
+
     <script>
-        // --- CONFIGURATION ---
+        // --- Configuration ---
         // Configuration is loaded from config.js
         // If config.js doesn't exist, fallback to placeholder values
         const AIO_USERNAME = typeof CONFIG !== 'undefined' ? CONFIG.AIO_USERNAME : "YOUR_ADAFRUIT_USERNAME";
         const AIO_KEY = typeof CONFIG !== 'undefined' ? CONFIG.AIO_KEY : "YOUR_ADAFRUIT_IO_KEY";
-        const FEED_NAME = typeof CONFIG !== 'undefined' ? CONFIG.FEED_NAME : "jarvis-commands";
-        // -------------------
+        const COMMAND_FEED_ID = typeof CONFIG !== 'undefined' ? CONFIG.FEED_NAME : "jarvis-commands";
+        const FEEDBACK_FEED_ID = "agent-feedback"; // Your new feedback feed
 
-        async function sendCommand() {
-            const commandInput = document.getElementById('commandInput');
-            const status = document.getElementById('status');
-            const command = commandInput.value.trim();
+        const AIO_HOST = "io.adafruit.com";
+        const AIO_PORT = 443; // Use 443 for secure websockets
+        const AIO_CLIENT_ID = "web_" + Math.random(); // Must be unique        // --- MQTT Client Setup ---
+        const client = new Paho.MQTT.Client(AIO_HOST, AIO_PORT, AIO_CLIENT_ID);
+        client.onConnectionLost = onConnectionLost;
+        client.onMessageArrived = onMessageArrived;
 
-            if (!command) {
-                status.textContent = "Error: Command cannot be empty.";
-                return;
-            }
+        // --- Connect to Adafruit IO ---
+        client.connect({
+            userName: AIO_USERNAME,
+            password: AIO_KEY,
+            useSSL: true,
+            onSuccess: onConnect,
+            onFailure: onFailure
+        });
 
-            if (!AIO_USERNAME || AIO_USERNAME === "YOUR_ADAFRUIT_USERNAME") {
-                alert("ERROR: Please configure your Adafruit credentials in the index.html file.");
-                return;
-            }
+        function onConnect() {
+            console.log("Connected to Adafruit IO!");
+            const feedbackLog = document.getElementById('feedback-log');
+            feedbackLog.innerHTML = 'Connected! Waiting for feedback...\n';
 
-            status.textContent = `Sending: ${command}...`;
+            // Subscribe to the feedback feed
+            const feedbackTopic = `${AIO_USERNAME}/feeds/${FEEDBACK_FEED_ID}`;
+            client.subscribe(feedbackTopic);
+            console.log(`Subscribed to: ${feedbackTopic}`);
+        }
 
-            const url = `https://io.adafruit.com/api/v2/${AIO_USERNAME}/feeds/${FEED_NAME}/data`;
+        function onFailure(responseObject) {
+            console.error("Connection failed: " + responseObject.errorMessage);
+            document.getElementById('feedback-log').innerHTML = "Connection failed. Check credentials and console for errors.";
+        }
 
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-AIO-Key': AIO_KEY
-                    },
-                    body: JSON.stringify({
-                        value: command
-                    })
-                });
-
-                if (response.ok) {
-                    status.textContent = `Success! Command "${command}" sent.`;
-                    commandInput.value = '';
-                } else {
-                    const errorData = await response.json();
-                    status.textContent = `Error: ${errorData.error || 'Failed to send.'}`;
-                }
-            } catch (error) {
-                status.textContent = "Network Error. Check console for details.";
-                console.error("Error sending command:", error);
+        function onConnectionLost(responseObject) {
+            if (responseObject.errorCode !== 0) {
+                console.log("Connection lost: " + responseObject.errorMessage);
             }
         }
 
+        // --- This function is the most important part for feedback ---
+        function onMessageArrived(message) {
+            const topic = message.destinationName;
+            const payload = message.payloadString;
+
+            console.log(`Message arrived on topic ${topic}: ${payload}`);
+
+            const feedbackLog = document.getElementById('feedback-log');
+            // Append the new message to the log
+            feedbackLog.innerHTML += `\n[${new Date().toLocaleTimeString()}] Agent: ${payload}`;
+            // Auto-scroll to the bottom
+            feedbackLog.scrollTop = feedbackLog.scrollHeight;
+        }
+
+        // --- Function to send commands (you may already have this) ---
+        function sendCommand() {
+            const commandInput = document.getElementById('command-input');
+            const command = commandInput.value;
+            if (command.trim() === "") return;
+
+            const commandTopic = `${AIO_USERNAME}/feeds/${COMMAND_FEED_ID}`;
+            const message = new Paho.MQTT.Message(command);
+            message.destinationName = commandTopic;
+            client.send(message);
+
+            // Log that we sent the command
+            const feedbackLog = document.getElementById('feedback-log');
+            feedbackLog.innerHTML += `\n[${new Date().toLocaleTimeString()}] You: ${command}`;
+            feedbackLog.scrollTop = feedbackLog.scrollHeight;
+
+            commandInput.value = ""; // Clear the input
+        }
+
         // Allow pressing Enter to send command
-        document.getElementById('commandInput').addEventListener('keypress', function(event) {
+        document.getElementById('command-input').addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 sendCommand();
             }
         });
+
     </script>
+
 </body>
 </html>
