@@ -11,6 +11,8 @@ A web-based interface for sending commands to JARVIS via Adafruit IO.
 
 ## Setup
 
+### Local Development
+
 1. Clone this repository
 2. Copy `config.example.js` to `config.js`
 3. Edit `config.js` and add your Adafruit IO credentials:
@@ -18,6 +20,18 @@ A web-based interface for sending commands to JARVIS via Adafruit IO.
    - `AIO_KEY`: Your Adafruit IO key
    - `FEED_NAME`: Your feed name (default: "jarvis-commands")
 4. Open `index.html` in a web browser
+
+### GitHub Pages Deployment
+
+This project can be automatically deployed to GitHub Pages using GitHub Secrets:
+
+1. Go to repository **Settings** → **Secrets and variables** → **Actions**
+2. Add these repository secrets:
+   - `AIO_USERNAME`: Your Adafruit IO username
+   - `AIO_KEY`: Your Adafruit IO key  
+   - `FEED_NAME`: Your feed name
+3. Enable GitHub Pages in **Settings** → **Pages** → Source: **GitHub Actions**
+4. The workflow will automatically deploy on every push to main branch
 
 ## Configuration
 
