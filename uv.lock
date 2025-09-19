@@ -23,6 +23,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "adafruit-io" },
+    { name = "paho-mqtt" },
     { name = "setuptools", version = "75.3.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
     { name = "setuptools", version = "80.9.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
 ]
@@ -30,7 +31,8 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "adafruit-io" },
-    { name = "setuptools" },
+    { name = "paho-mqtt" },
+    { name = "setuptools", specifier = "<81" },
 ]
 
 [[package]]

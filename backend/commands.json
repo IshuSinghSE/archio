@@ -1,0 +1,47 @@
+[
+  {
+    "intent": "get_time",
+    "description": "Tells the current time.",
+    "pattern": "what(?:'s| is) the time",
+    "entities": []
+  },
+  {
+    "intent": "list_running_apps",
+    "description": "Lists the top 10 currently running applications or processes.",
+    "pattern": "list(?: all| the)? running apps",
+    "entities": []
+  },
+  {
+    "intent": "create_folder",
+    "description": "Creates a new folder on the desktop. Requires a 'folder_name'.",
+    "pattern": "create(?: a)? folder(?: named| called)? (.*)",
+    "entities": ["folder_name"]
+  },
+  {
+    "intent": "open_website",
+    "description": "Opens a given URL in the default web browser. Requires a 'url'.",
+    "pattern": "open(?: the)? website (.*)",
+    "entities": ["url"]
+  },
+  {
+    "intent": "open_app",
+    "description": "Launches a desktop application. Requires an 'app_name'.",
+    "pattern": "(?:open|launch|start) the app (.*)",
+    "entities": ["app_name"]
+  },
+  {
+    "intent": "search_web",
+    "description": "Performs a Google search for a given query. Requires a 'query'.",
+    "entities": ["query"]
+  },
+  {
+    "intent": "create_file",
+    "description": "Creates a new empty file on the desktop. Requires a 'file_name'.",
+    "entities": ["file_name"]
+  },
+  {
+    "intent": "change_wallpaper",
+    "description": "Changes the desktop wallpaper. Requires the full 'file_path' to an image.",
+    "entities": ["file_path"]
+  }
+]
